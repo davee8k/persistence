@@ -10,17 +10,18 @@ PHP 8.1 and newer
 
 ## Usage
 
-More examples of use are in /demo and /test directory
+More examples of use are in /demo or /test directory
 
 ### Basic entity definition
 
-	use Persistence\Attr\Table,
-		Persistence\Attr\Column,
-		Persistence\Attr\Id,
-		Persistence\Entity;
+	use Persistence\Attr\Table;
+	use Persistence\Attr\Column;
+	use Persistence\Attr\Id;
+	use Persistence\Entity;
 
 	#[Table('example')]	// database table name
-	class ExampleEntity extends Entity {
+	class ExampleEntity extends Entity
+	{
 		public function __construct (
 			#[Column('custom_name')]	// different column name in database
 			public string $name,
@@ -34,7 +35,8 @@ More examples of use are in /demo and /test directory
 
 	use Persistence\Dao;
 
-	class ExampleEntityDao extends Dao {
+	class ExampleEntityDao extends Dao
+	{
 		public static string $class = ExampleEntity::class;
 	}
 
