@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 namespace TestEntity;
 
@@ -10,12 +11,16 @@ use Persistence\Attr\Table,
  * Basic dummy entity
  */
 #[Table('basic')]
-class Basic extends Entity {
+class Basic extends Entity
+{
 
-	public function __construct (
-		public string $name,
-		public int $price,
-		#[Id]
-		public ?int $id = null
-	) {}
+	public function __construct(
+			public string $name,
+			public int $price,
+			#[Id]
+			public ?int $id = null
+	)
+	{
+
+	}
 }

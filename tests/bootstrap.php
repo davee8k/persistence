@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 require_once '../src/Persistence/Attr/Table.php';
 require_once '../src/Persistence/Attr/Collection.php';

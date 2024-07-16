@@ -1,14 +1,16 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 namespace Persistence;
 
-use PDO,
-	InvalidArgumentException;
+use PDO;
+use InvalidArgumentException;
 
 /**
  * Convert data from database to Entities
  */
-class Manager {
+class Manager
+{
 	/** @var PDO */
 	private PDO $db;
 	/** @var AttributeReader */
@@ -17,7 +19,8 @@ class Manager {
 	/**
 	 * @param PDO $db
 	 */
-	public function __construct (PDO $db, AttributeReader $reader) {
+	public function __construct(PDO $db, AttributeReader $reader)
+	{
 		$this->db = $db;
 		$this->reader = $reader;
 	}
@@ -26,17 +29,19 @@ class Manager {
 	 * Get database connection for custom queries in DAO
 	 * @return PDO
 	 */
-	protected function getPdo (): PDO {
+	protected function getPdo(): PDO
+	{
 		return $this->db;
 	}
 
 	/**
 	 * Load entity from database
-	 * @param string $className
+	 * @param class-string $className
 	 * @param array<string, string|int>|string|int $id
 	 * @return Entity|null
 	 */
-	public function find (string $className, array|string|int $id): ?Entity {
+	public function find(string $className, array|string|int $id): ?Entity
+	{
 		$info = $this->reader->getInfo($className);
 
 		if (empty($info[Attr\Id::class]) && !is_array($id) || !empty($info[Attr\Id::class]) && is_array($id)) {
@@ -45,16 +50,14 @@ class Manager {
 
 		$cols = [];
 		if (is_array($id)) {
-			foreach ($id as $col=>$val) {
+			foreach ($id as $col => $val) {
 				if (isset($info[Attr\UniqueId::class][$col])) {
 					$cols[] = $col." = ?";
-				}
-				else {
+				} else {
 					throw new InvalidArgumentException("Nonexistent unique key");
 				}
 			}
-		}
-		else {
+		} else {
 			$cols[] = $this->getColumnName($info, $info[Attr\Id::class])." = ?";
 		}
 		$req = $this->db->prepare("SELECT * FROM ".$info[Attr\Table::class].
@@ -67,12 +70,13 @@ class Manager {
 
 	/**
 	 * Load list of entities from database
-	 * @param string $className
+	 * @param class-string $className
 	 * @param int $limit
 	 * @param int $offset
 	 * @return Entity[]|null
 	 */
-	public function findAll (string $className, int $limit = null, int $offset = null): ?array {
+	public function findAll(string $className, int $limit = null, int $offset = null): ?array
+	{
 		$info = $this->reader->getInfo($className);
 
 		$request = $this->db->query("SELECT * FROM ".$info[Attr\Table::class].
@@ -92,14 +96,13 @@ class Manager {
 	 * Update database based on current status of given entity
 	 * @param Entity $record
 	 */
-	public function persist (Entity &$record): void {
+	public function persist(Entity &$record): void
+	{
 		if ($record->isDelete() === true) {
 			if ($record->isExist()) $this->delete($record);
-		}
-		else if ($record->isExist()) {
+		} elseif ($record->isExist()) {
 			$this->update($record);
-		}
-		else {
+		} else {
 			$this->create($record);
 		}
 	}
@@ -112,17 +115,18 @@ class Manager {
 	 * @return array<string, mixed>
 	 * @throws InvalidArgumentException
 	 */
-	protected function loadSubEntities (string $parentClass, array $parentInfo, array $parentData): array {
+	protected function loadSubEntities(string $parentClass, array $parentInfo, array $parentData): array
+	{
 		$key = $this->getKeyColumn($parentInfo);
 
-		foreach ($parentInfo[Attr\Collection::class] as $name=>$list) {
+		foreach ($parentInfo[Attr\Collection::class] as $name => $list) {
 			$currentClass = $list->getType();
 			$info = $this->reader->getInfo($currentClass);
 
 			$keys = [];
 			$foreigns = !empty($info[Attr\JoinColumn::class]) ? $info[Attr\JoinColumn::class] : null;
 			if ($foreigns !== null) {
-				foreach ($foreigns as $forName=>$foreign) {
+				foreach ($foreigns as $forName => $foreign) {
 					if ($foreign->getParentType() == $parentClass) {
 						$keys[$this->getColumnName($info, $forName)] = $parentData[$this->getColumnName($parentInfo, $key)];
 					}
@@ -130,7 +134,7 @@ class Manager {
 			}
 
 			if (empty($keys)) {
-				throw new InvalidArgumentException("Invalid subentity: ".htmlspecialchars($currentClass, ENT_QUOTES). " for: ".htmlspecialchars($parentClass, ENT_QUOTES));
+				throw new InvalidArgumentException("Invalid subentity: ".htmlspecialchars($currentClass, ENT_QUOTES)." for: ".htmlspecialchars($parentClass, ENT_QUOTES));
 			}
 
 			$req = $this->db->prepare("SELECT * FROM ".$info[Attr\Table::class].
@@ -149,7 +153,8 @@ class Manager {
 	 * Insert entity into database
 	 * @param Entity $record
 	 */
-	public function create (Entity $record): void {
+	public function create(Entity $record): void
+	{
 		$info = $this->reader->getInfo(get_class($record));
 		$primary = !empty($info[Attr\Id::class]) ? $info[Attr\Id::class] : null;
 		$key = $this->getKeyColumn($info);
@@ -173,7 +178,8 @@ class Manager {
 	 * Update entity into database
 	 * @param Entity $record
 	 */
-	public function update (Entity $record): void {
+	public function update(Entity $record): void
+	{
 		$info = $this->reader->getInfo(get_class($record));
 		$key = $this->getKeyColumn($info);
 
@@ -197,10 +203,11 @@ class Manager {
 	 * @param Entity $record
 	 * @param bool $foreign
 	 */
-	public function delete (Entity $record, bool $foreign = true): void {
+	public function delete(Entity $record, bool $foreign = true): void
+	{
 		$info = $this->reader->getInfo(get_class($record));
 		if ($foreign && !empty($info[Attr\Collection::class])) {
-			foreach ($info[Attr\Collection::class] as $name=>$collection) {
+			foreach ($info[Attr\Collection::class] as $name => $collection) {
 				foreach ($record->$name as $item) {
 					$this->delete($item);
 				}
@@ -215,30 +222,30 @@ class Manager {
 
 	/**
 	 * Creates Entity from data in database
-	 * @param string $className
+	 * @param class-string $className
 	 * @param array<string, mixed> $info
 	 * @param array<string, mixed> $data
 	 * @return Entity
 	 * @throws InvalidArgumentException
 	 */
-	protected function buildEntity (string $className, array $info, array $data): Entity {
+	protected function buildEntity(string $className, array $info, array $data): Entity
+	{
 		if (!empty($info[Attr\Collection::class])) {
 			$data = $this->loadSubEntities($className, $info, $data);
 		}
 
-		foreach ($info[Attr\Column::class] as $key=>$val) {
+		foreach ($info[Attr\Column::class] as $key => $val) {
 			if ($val[AttributeReader::TYPE] === \DateTime::class) {
 				if ($data[$key]) $data[$key] = new \DateTime($data[$key]);
-			}
-			else if (is_subclass_of($val[AttributeReader::TYPE], Entity::class)) {
+			} elseif (is_subclass_of($val[AttributeReader::TYPE], Entity::class)) {
 				if (isset($info[Attr\JoinColumn::class][$key])) {
 					$keyVal = $data[$val['name']];
 					unset($data[$val['name']]);
 					if ($keyVal) {
 						$data[$key] = $this->find($val[AttributeReader::TYPE], $keyVal);
 					}
-				}
-				else throw new InvalidArgumentException("Missing JoinColumn settings for: ".htmlspecialchars($key, ENT_QUOTES));
+				} else
+						throw new InvalidArgumentException("Missing JoinColumn settings for: ".htmlspecialchars($key, ENT_QUOTES));
 			}
 		}
 
@@ -254,17 +261,18 @@ class Manager {
 	 * @param array<string, mixed> $collections
 	 * @param string|null $key
 	 */
-	protected function persistSubRecords (Entity $record, array $collections, ?string $key): void {
+	protected function persistSubRecords(Entity $record, array $collections, ?string $key): void
+	{
 		$class = get_class($record);
 
-		foreach ($collections as $name=>$collection) {
+		foreach ($collections as $name => $collection) {
 			foreach ($record->$name as $item) {
 				if ($key) {
 					// update foreign key
 					$info = $this->reader->getInfo(get_class($item));
 					$foreigns = !empty($info[Attr\JoinColumn::class]) ? $info[Attr\JoinColumn::class] : null;
 					if ($foreigns !== null) {
-						foreach ($foreigns as $forName=>$foreign) {
+						foreach ($foreigns as $forName => $foreign) {
 							if ($foreign->getParentType() == $class) {
 								$item->$forName = $record->$key;
 							}
@@ -281,7 +289,8 @@ class Manager {
 	 * @param array<string, mixed> $info
 	 * @return string|null
 	 */
-	protected function getKeyColumn ($info): ?string {
+	protected function getKeyColumn($info): ?string
+	{
 		if (!empty($info[Attr\Id::class])) {
 			return $info[Attr\Id::class];
 		}
@@ -297,7 +306,8 @@ class Manager {
 	 * @param Entity $record
 	 * @return array<string, string|int>
 	 */
-	protected function getKeys (array $info, Entity &$record): array {
+	protected function getKeys(array $info, Entity &$record): array
+	{
 		$key = $this->getKeyColumn($info);
 
 		$keys = [];
@@ -305,7 +315,7 @@ class Manager {
 			$keys[$this->getColumnName($info, $key)] = $record->$key;
 		}
 		if (empty($keys)) {
-			foreach ($info[Attr\UniqueId::class] as $uniqueKey=>$unique) {
+			foreach ($info[Attr\UniqueId::class] as $uniqueKey => $unique) {
 				$keys[$this->getColumnName($info, $uniqueKey)] = $record->$uniqueKey;
 			}
 		}
@@ -318,9 +328,10 @@ class Manager {
 	 * @param bool $namedParams
 	 * @return string[]
 	 */
-	protected function getColumnBinds (array $pairs, bool $namedParams = false): array {
+	protected function getColumnBinds(array $pairs, bool $namedParams = false): array
+	{
 		$cols = [];
-		foreach ($pairs as $key=>$val) {
+		foreach ($pairs as $key => $val) {
 			$cols[] = $key.' = '.($namedParams ? ':'.$key : '?');
 		}
 		return $cols;
@@ -332,7 +343,8 @@ class Manager {
 	 * @param string $prop
 	 * @return string
 	 */
-	protected function getColumnName (array $info, string $prop): string {
+	protected function getColumnName(array $info, string $prop): string
+	{
 		return $info[Attr\Column::class][$prop][AttributeReader::NAME];
 	}
 
@@ -340,11 +352,12 @@ class Manager {
 	 *
 	 * @param array<string, mixed> $info
 	 * @param array<string, mixed> $array
-	 * @return array<string|int, <array <string|int, <array <string, mixed>>>
+	 * @return array<string|int, array<string|int, array<string, mixed>>>
 	 */
-	protected function renameToColumns (array $info, array $array): array {
+	protected function renameToColumns(array $info, array $array): array
+	{
 		$newArray = [];
-		foreach ($array as $key=>$val) {
+		foreach ($array as $key => $val) {
 			if (is_subclass_of($val, Entity::class)) {
 				if (!$val->isExist()) {
 					throw new InvalidArgumentException("Subentity must be saved first");
@@ -358,25 +371,24 @@ class Manager {
 					if (!empty($subInfo[Attr\Id::class])) {
 						$subData = $val->getData();
 						$newArray[$info[Attr\Column::class][$key][AttributeReader::NAME]] = $subData[$subInfo[Attr\Id::class]];
-					}
-					else if (!empty($subInfo[Attr\UniqueId::class])) {
+					} elseif (!empty($subInfo[Attr\UniqueId::class])) {
 						$subData = $val->getData();
 						$newArray[$info[Attr\Column::class][$key][AttributeReader::NAME]] = $subData[$subInfo[Attr\Id::class]];
 					}
 				}
-			}
-			else {
+			} else {
 				$newArray[$info[Attr\Column::class][$key][AttributeReader::NAME]] = $val;
 			}
 		}
 		return $newArray;
 	}
 
-	protected function renameToProperties (array $info, array $array): array {
+	protected function renameToProperties(array $info, array $array): array
+	{
 		$newArray = [];
-		foreach ($array as $key=>$val) {
+		foreach ($array as $key => $val) {
 			$newName = null;
-			foreach ($info[Attr\Column::class] as $prop=>$set) {
+			foreach ($info[Attr\Column::class] as $prop => $set) {
 				if ($set[AttributeReader::NAME] === $key) {
 					$newName = $prop;
 					break;

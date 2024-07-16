@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 namespace TestEntity;
 
@@ -12,14 +13,23 @@ use Persistence\Attr\Table,
  * Enitty with collection and custom column names
  */
 #[Table('complex')]
-class Complex extends Entity {
+class Complex extends Entity
+{
 
-	public function __construct (
-		#[Column('custom_name')]
-		public string $name,
-		#[Collection(ComplexItem::class)]
-		public array $list = [],
-		#[Id('custom_key')]
-		public ?int $id = null
-	) {}
+	/**
+	 * @param string $name
+	 * @param ComplexItem[] $list
+	 * @param int|null $id
+	 */
+	public function __construct(
+			#[Column('custom_name')]
+			public string $name,
+			#[Collection(ComplexItem::class)]
+			public array $list = [],
+			#[Id('custom_key')]
+			public ?int $id = null
+	)
+	{
+
+	}
 }

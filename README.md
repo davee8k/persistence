@@ -2,7 +2,7 @@
 
 ## Description
 
-Light weight DAO implementation for PHP inspired by Java Spring.
+Lightweight DAO implementation for PHP inspired by Java's Spring framework.
 
 ## Requirements
 
@@ -10,7 +10,7 @@ PHP 8.1 and newer
 
 ## Usage
 
-More examples of use are in demo directory
+More examples of use are in /demo and /test directory
 
 ### Basic entity definition
 

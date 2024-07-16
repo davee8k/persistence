@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 namespace TestEntity;
 
@@ -11,14 +12,18 @@ use Persistence\Attr\Table,
  * Entity with multicolumn key
  */
 #[Table('complex_item')]
-class ComplexItem extends Entity {
+class ComplexItem extends Entity
+{
 
-	public function __construct (
-		public string $value,
-		#[UniqueId()]
-		public int $type,
-		#[UniqueId()]
-		#[JoinColumn(Complex::class)]
-		public int $complex_id
-	) {}
+	public function __construct(
+			public string $value,
+			#[UniqueId()]
+			public int $type,
+			#[UniqueId()]
+			#[JoinColumn(Complex::class)]
+			public int $complex_id
+	)
+	{
+
+	}
 }

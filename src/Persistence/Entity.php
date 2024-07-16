@@ -1,22 +1,24 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 namespace Persistence;
 
-use JsonSerializable,
-	InvalidArgumentException;
+use JsonSerializable;
+use InvalidArgumentException;
 
 /**
  * Core functions for entities
  */
-abstract class Entity extends EntityStatus implements JsonSerializable {
-
+abstract class Entity extends EntityStatus implements JsonSerializable
+{
 	/**
 	 * Get basic data from entity
 	 * @return array<string, mixed>
 	 */
-	public function getData (): array {
+	public function getData(): array
+	{
 		$list = get_object_vars($this);
-		foreach ($list as $key=>$item) {
+		foreach ($list as $key => $item) {
 			if (is_array($item)) {
 				unset($list[$key]);
 			}
@@ -28,7 +30,8 @@ abstract class Entity extends EntityStatus implements JsonSerializable {
 	 * Get prepared and filtered data for json serialization
 	 * @return array<string, mixed>
 	 */
-	public function jsonSerialize (): array {
+	public function jsonSerialize(): array
+	{
 		return get_object_vars($this);
 	}
 
@@ -39,7 +42,8 @@ abstract class Entity extends EntityStatus implements JsonSerializable {
 	 * @return Entity[]
 	 * @throws InvalidArgumentException
 	 */
-	protected function constructCollection (string $entityType, ?array $list) {
+	protected function constructCollection(string $entityType, ?array $list)
+	{
 		if (!empty($list)) {
 			foreach ($list as $item) {
 				if (!$item instanceof Entity || $entityType !== get_class($item)) {

@@ -1,24 +1,26 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 namespace Persistence;
 
-use PDO,
-	RuntimeException;
+use PDO;
+use RuntimeException;
 
 /**
  * Generic CRUD action for basic entities
  */
-abstract class Dao {
-
+abstract class Dao
+{
 	/** @var Manager */
 	private Manager $manager;
-	/** @var String */
+	/** @var class-string */
 	public static string $class;
 
 	/**
 	 * @param Manager $manager
 	 */
-	public function __construct (Manager $manager) {
+	public function __construct(Manager $manager)
+	{
 		$this->manager = $manager;
 	}
 
@@ -27,7 +29,8 @@ abstract class Dao {
 	 * @param int $id
 	 * @return Entity|null
 	 */
-	public function find (int $id): ?Entity {
+	public function find(int $id): ?Entity
+	{
 		return $this->manager->find(static::$class, $id);
 	}
 
@@ -37,7 +40,8 @@ abstract class Dao {
 	 * @param int|null $offset
 	 * @return array<Entity>|null
 	 */
-	public function findAll (int $limit = null, int $offset = null): ?array {
+	public function findAll(int $limit = null, int $offset = null): ?array
+	{
 		return $this->manager->findAll(static::$class, $limit, $offset);
 	}
 
@@ -45,7 +49,8 @@ abstract class Dao {
 	 * Insert entity into database
 	 * @param Entity $record
 	 */
-	public function create (Entity &$record): void {
+	public function create(Entity &$record): void
+	{
 		if ($this->checkType($record)) $this->manager->create($record);
 	}
 
@@ -53,7 +58,8 @@ abstract class Dao {
 	 * Update entity into database
 	 * @param Entity $record
 	 */
-	public function update (Entity &$record): void {
+	public function update(Entity &$record): void
+	{
 		if ($this->checkType($record)) $this->manager->update($record);
 	}
 
@@ -61,7 +67,8 @@ abstract class Dao {
 	 * Delete entity from database
 	 * @param Entity $record
 	 */
-	public function delete (Entity &$record): void {
+	public function delete(Entity &$record): void
+	{
 		if ($this->checkType($record)) $this->manager->delete($record, true);
 	}
 
@@ -69,7 +76,8 @@ abstract class Dao {
 	 * Update database based on current status of given entity
 	 * @param Entity $record
 	 */
-	public function persist (Entity &$record): void {
+	public function persist(Entity &$record): void
+	{
 		if ($this->checkType($record)) $this->manager->persist($record);
 	}
 
@@ -79,7 +87,8 @@ abstract class Dao {
 	 * @return bool
 	 * @throws RuntimeException
 	 */
-	protected function checkType (Entity &$record): bool {
+	protected function checkType(Entity &$record): bool
+	{
 		if (static::$class !== get_class($record)) {
 			throw new RuntimeException('Invalid Entity type');
 		}

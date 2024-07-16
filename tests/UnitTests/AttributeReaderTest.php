@@ -1,39 +1,49 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 use Persistence\AttributeReader;
-use Persistence\Attr\{UniqueId, JoinColumn, Collection};
-use TestEntity\{Basic, Complex, ComplexItem};
+use Persistence\Attr\{
+	UniqueId,
+	JoinColumn,
+	Collection
+};
+use TestEntity\{
+	Basic,
+	Complex,
+	ComplexItem
+};
 
-class AttributeReaderTest extends \PHPUnit\Framework\TestCase {
-
+class AttributeReaderTest extends \PHPUnit\Framework\TestCase
+{
 	/** @var array<string, mixed> */
 	public static $attrBasic = [
-			'Persistence\Attr\Table' => 'basic',
-			'Persistence\Attr\Column' => [
-				'name' => [
-					'name' => 'name',
-					'type' => 'string',
-					'null' => false
-				],
-				'price' => [
-					'name' => 'price',
-					'type' => 'int',
-					'null' => false
-				],
-				'id' => [
-					'name' => 'id',
-					'type' => 'int',
-					'null' => true
-				]
+		'Persistence\Attr\Table' => 'basic',
+		'Persistence\Attr\Column' => [
+			'name' => [
+				'name' => 'name',
+				'type' => 'string',
+				'null' => false
 			],
-			'Persistence\Attr\Id' => 'id'
-		];
+			'price' => [
+				'name' => 'price',
+				'type' => 'int',
+				'null' => false
+			],
+			'id' => [
+				'name' => 'id',
+				'type' => 'int',
+				'null' => true
+			]
+		],
+		'Persistence\Attr\Id' => 'id'
+	];
 
 	/**
 	 *
 	 * @return array<string, mixed>
 	 */
-	public static function attrComplex (): array {
+	public static function attrComplex(): array
+	{
 		return [
 			'Persistence\Attr\Table' => 'complex',
 			'Persistence\Attr\Column' => [
@@ -64,7 +74,8 @@ class AttributeReaderTest extends \PHPUnit\Framework\TestCase {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public static function attrComplexItem (): array {
+	public static function attrComplexItem(): array
+	{
 		return [
 			'Persistence\Attr\Table' => 'complex_item',
 			'Persistence\Attr\Column' => [
@@ -94,7 +105,8 @@ class AttributeReaderTest extends \PHPUnit\Framework\TestCase {
 		];
 	}
 
-	public function testCreateBasicFunctionsSuccess (): void {
+	public function testCreateBasicFunctionsSuccess(): void
+	{
 		$reader = new AttributeReader();
 
 		$this->assertEquals(static::$attrBasic, $reader->getInfo(TestEntity\Basic::class));

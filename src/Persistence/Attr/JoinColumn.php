@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 namespace Persistence\Attr;
 
@@ -8,8 +9,8 @@ use Attribute;
  * Indicates the join column in database (single column foreign key)
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
-class JoinColumn extends Column {
-
+class JoinColumn extends Column
+{
 	/** @var string */
 	private string $class;
 
@@ -17,7 +18,8 @@ class JoinColumn extends Column {
 	 * @param string $class
 	 * @param string|null $columnName
 	 */
-	public function __construct (string $class, ?string $columnName = null) {
+	public function __construct(string $class, ?string $columnName = null)
+	{
 		parent::__construct($columnName);
 		$this->class = $class;
 	}
@@ -25,7 +27,8 @@ class JoinColumn extends Column {
 	/**
 	 * @return string
 	 */
-	public function getParentType (): string {
+	public function getParentType(): string
+	{
 		return $this->class;
 	}
 }

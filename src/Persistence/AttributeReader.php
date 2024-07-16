@@ -1,38 +1,41 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 namespace Persistence;
 
-use ReflectionClass,
-	ReflectionMethod,
-	ReflectionProperty,
-	ReflectionAttribute,
-	RuntimeException;
+use ReflectionClass;
+use ReflectionMethod;
+use ReflectionProperty;
+use ReflectionAttribute;
+use RuntimeException;
 
 /**
  * Load additional information from Attributes
  */
-class AttributeReader {
-
+class AttributeReader
+{
 	/** @var string */
 	public const NAME = 'name',
-		TYPE = 'type',
-		NULL = 'null',
-		DEFAULT = 'default';
+			TYPE = 'type',
+			NULL = 'null',
+			DEFAULT = 'default';
 
 	/** @var array<string, array<string, mixed>> */
 	private array $cache;
 
-	public function __construct () {
+	public function __construct()
+	{
 		$this->cache = [];
 	}
 
 	/**
 	 * Load basic information about entity
-	 * @param string $className
+	 * @param class-string $className
 	 * @return array<string, mixed>
 	 * @throws RuntimeException
 	 */
-	public function getInfo (string $className): array {
+	public function getInfo(string $className): array
+	{
 		if (isset($this->cache[$className])) return $this->cache[$className];
 
 		$refClass = new ReflectionClass($className);
@@ -42,11 +45,11 @@ class AttributeReader {
 
 		$info = [Attr\Table::class => $this->getTable($className, $refClass->getAttributes(Attr\Table::class))];
 
-		foreach ($refClass->getProperties(ReflectionProperty::IS_PUBLIC|ReflectionProperty::IS_PROTECTED) as $property) {
+		foreach ($refClass->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED) as $property) {
 			$this->readProperty($property, $info);
 		}
 
-		foreach ($refClass->getMethods(ReflectionMethod::IS_PUBLIC|ReflectionMethod::IS_PROTECTED) as $method) {
+		foreach ($refClass->getMethods(ReflectionMethod::IS_PUBLIC | ReflectionMethod::IS_PROTECTED) as $method) {
 			$attributes = $method->getAttributes(null, ReflectionAttribute::IS_INSTANCEOF);
 
 			foreach ($attributes as $attribute) {
@@ -68,7 +71,8 @@ class AttributeReader {
 	 * @param ReflectionAttribute[] $attributes
 	 * @return string
 	 */
-	private function getTable (string $className, array $attributes): string {
+	private function getTable(string $className, array $attributes): string
+	{
 		if (!empty($attributes)) {
 			/** @var Attr\Table */
 			$instance = $attributes[0]->newInstance();
@@ -83,11 +87,13 @@ class AttributeReader {
 	 * @param ReflectionProperty $property
 	 * @param array<string, mixed> $info
 	 */
-	private function readProperty (ReflectionProperty $property, array &$info): void {
+	private function readProperty(ReflectionProperty $property, array &$info): void
+	{
 		$columnName = $property->name;
 
 		$attributes = $property->getAttributes(null, ReflectionAttribute::IS_INSTANCEOF);
 		foreach ($attributes as $attribute) {
+			/** @var Attr\Column */
 			$instance = $attribute->newInstance();
 
 			switch ($attribute->getName()) {
