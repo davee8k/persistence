@@ -19,3 +19,5 @@ require_once '../src/Persistence/Manager.php';
 require_once './TestEntity/Basic.php';
 require_once './TestEntity/Complex.php';
 require_once './TestEntity/ComplexItem.php';
+require_once './TestEntity/FailNoEntity.php';
+require_once './TestEntity/FailNoKey.php';

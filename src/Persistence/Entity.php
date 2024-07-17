@@ -42,7 +42,7 @@ abstract class Entity extends EntityStatus implements JsonSerializable
 	 * @return Entity[]
 	 * @throws InvalidArgumentException
 	 */
-	protected function constructCollection(string $entityType, ?array $list)
+	protected function checkCollection(string $entityType, ?array $list)
 	{
 		if (!empty($list)) {
 			foreach ($list as $item) {

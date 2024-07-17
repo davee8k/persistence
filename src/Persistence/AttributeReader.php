@@ -68,7 +68,7 @@ class AttributeReader
 	/**
 	 *
 	 * @param string $className
-	 * @param ReflectionAttribute[] $attributes
+	 * @param ReflectionAttribute<Attr\Table>[] $attributes
 	 * @return string
 	 */
 	private function getTable(string $className, array $attributes): string
@@ -78,8 +78,10 @@ class AttributeReader
 			$instance = $attributes[0]->newInstance();
 			return $instance->getName();
 		}
+
 		$pos = strrpos($className, '\\');
-		return $pos ? substr($className, $pos + 1) : $className;
+		if ($pos) $className = substr($className, $pos + 1);
+		return ctype_upper($className) ? $className : lcfirst($className);
 	}
 
 	/**

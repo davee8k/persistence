@@ -3,19 +3,17 @@ declare(strict_types=1);
 
 namespace TestEntity;
 
-use Persistence\Attr\Table,
-	Persistence\Attr\Id,
-	Persistence\Attr\Column,
-	Persistence\Attr\Collection,
-	Persistence\Entity;
+use Persistence\Attr\Table;
+use Persistence\Attr\Id;
+use Persistence\Attr\Column;
+use Persistence\Attr\Collection;
+use Persistence\Entity;
 
 /**
  * Enitty with collection and custom column names
  */
-#[Table('complex')]
 class Complex extends Entity
 {
-
 	/**
 	 * @param string $name
 	 * @param ComplexItem[] $list
@@ -30,6 +28,6 @@ class Complex extends Entity
 			public ?int $id = null
 	)
 	{
-
+		$this->checkCollection(ComplexItem::class, $this->list);
 	}
 }

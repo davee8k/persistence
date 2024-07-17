@@ -1,14 +1,10 @@
 <?php
 declare(strict_types=1);
 
-use TestEntity\{
-	Basic,
-	Complex,
-	ComplexItem
-};
-use Persistence\AttributeReader,
-	Persistence\EntityInteract,
-	Persistence\Manager;
+use TestEntity\{Basic, Complex, ComplexItem};
+use Persistence\AttributeReader;
+use Persistence\EntityInteract;
+use Persistence\Manager;
 
 class ManagerTest extends \PHPUnit\Framework\TestCase
 {
@@ -277,5 +273,161 @@ class ManagerTest extends \PHPUnit\Framework\TestCase
 
 		$this->assertEquals($data, $ent->getData());
 		$this->assertEquals('{"name":"test","list":[{"value":"A","type":1,"complex_id":99},{"value":"B","type":2,"complex_id":99}],"id":99}', json_encode($ent));
+	}
+
+	public function testCreateComplexWithListSuccess(): void
+	{
+		$this->mockComplex();
+
+		$this->mockDb->expects($this->once())
+				->method('lastInsertId')
+				->willReturn('99');
+
+		$req = $this->createMock(PDOStatement::class);
+		$reqItems = $this->createMock(PDOStatement::class);
+
+		$req->expects($this->once())
+				->method('execute')
+				->with(['custom_name' => 'test', 'custom_key' => null])
+				->willReturn(true);
+
+		$reqItems->expects($this->atMost(2))
+			->method('execute')
+			->willReturnMap([
+				[['value' => 'A', 'type' => 1, 'complex_id' => 99], true],
+				[['value' => 'B', 'type' => 2, 'complex_id' => 99], true]
+			]);
+
+		$this->mockDb->method('prepare')
+			->willReturnCallback(fn(string $property) => match ($property) {
+					"INSERT INTO complex (custom_name, custom_key) VALUES (:custom_name, :custom_key)" => $req,
+					"INSERT INTO complex_item (value, type, complex_id) VALUES (:value, :type, :complex_id)" => $reqItems,
+					default => throw new LogicException("Wrong class")
+				});
+
+		$items = [
+			new ComplexItem('A', 1),
+			new ComplexItem('B', 2)
+		];
+		$ent = new Complex('test', $items);
+
+		$manager = new Manager($this->mockDb, $this->mockReader);
+		$manager->persist($ent);
+
+		$this->assertEquals(true, $ent->isExist());
+		$this->assertEquals('{"name":"test","list":[{"value":"A","type":1,"complex_id":99},{"value":"B","type":2,"complex_id":99}],"id":99}', json_encode($ent));
+
+	}
+
+	public function testDeleteComplexWithListSuccess(): void
+	{
+		$this->mockComplex();
+
+		$req = $this->createMock(PDOStatement::class);
+		$reqItem = $this->createMock(PDOStatement::class);
+
+		$req->expects($this->once())
+				->method('execute')
+				->with(['custom_key' => 99])
+				->willReturn(true);
+
+		$reqItem->expects($this->atMost(2))
+			->method('execute')
+			->willReturnMap([
+				[['type' => 1, 'complex_id' => 99], true],
+				[['type' => 2, 'complex_id' => 99], true]
+			]);
+
+		$this->mockDb->method('prepare')
+			->willReturnCallback(fn(string $property) => match ($property) {
+					"DELETE FROM complex WHERE custom_key = :custom_key LIMIT 1" => $req,
+					"DELETE FROM complex_item WHERE type = :type AND complex_id = :complex_id LIMIT 1" => $reqItem,
+					default => throw new LogicException("Wrong class")
+				});
+
+		$items = [
+			new ComplexItem('A', 1, 99),
+			new ComplexItem('B', 2, 99)
+		];
+		$ent = new Complex('test', $items, 99);
+		EntityInteract::setUniqueKey($ent, ['custom_key' => 99]);
+		EntityInteract::setUniqueKey($ent->list[0], ['type' => 1, 'complex_id' => 99]);
+		EntityInteract::setUniqueKey($ent->list[1], ['type' => 2, 'complex_id' => 99]);
+		$ent->delete();
+
+		$manager = new Manager($this->mockDb, $this->mockReader);
+
+		$this->assertEquals(true, $ent->isExist());
+
+		$manager->persist($ent);
+
+		$this->assertEquals(false, $ent->isExist());
+	}
+
+	public function testUpdateComplexWithListSuccess(): void
+	{
+		$this->mockComplex();
+
+		$req = $this->createMock(PDOStatement::class);
+		$reqItem = $this->createMock(PDOStatement::class);
+
+		$req->expects($this->once())
+				->method('execute')
+				->with(['custom_name' => 'new', 'custom_key' => 99])
+				->willReturn(true);
+
+		$reqItem->expects($this->atMost(2))
+			->method('execute')
+			->willReturnMap([
+				[['value' => 'C', 'type' => 1, 'complex_id' => 99], true],
+				[['value' => 'D', 'type' => 2, 'complex_id' => 99], true]
+			]);
+
+		$this->mockDb->method('prepare')
+			->willReturnCallback(fn(string $property) => match ($property) {
+					"UPDATE complex SET custom_name = :custom_name, custom_key = :custom_key WHERE custom_key = :custom_key LIMIT 1" => $req,
+					"UPDATE complex_item SET value = :value, type = :type, complex_id = :complex_id WHERE type = :type AND complex_id = :complex_id LIMIT 1" => $reqItem,
+					default => throw new LogicException("Wrong class")
+				});
+
+		$items = [
+			new ComplexItem('A', 1, 99),
+			new ComplexItem('B', 2, 99)
+		];
+		$ent = new Complex('test', $items, 99);
+		EntityInteract::setUniqueKey($ent, ['custom_key' => 99]);
+		EntityInteract::setUniqueKey($ent->list[0], ['type' => 1, 'complex_id' => 99]);
+		EntityInteract::setUniqueKey($ent->list[1], ['type' => 2, 'complex_id' => 99]);
+
+		$ent->name = 'new';
+		$ent->list[0]->value = 'C';
+		$ent->list[1]->value = 'D';
+
+		$manager = new Manager($this->mockDb, $this->mockReader);
+
+		$this->assertEquals(true, $ent->isExist());
+
+		$manager->persist($ent);
+
+		$this->assertEquals(true, $ent->isExist());
+		$this->assertEquals('{"name":"new","list":[{"value":"C","type":1,"complex_id":99},{"value":"D","type":2,"complex_id":99}],"id":99}', json_encode($ent));
+	}
+
+	public function testFindByIdFail(): void
+	{
+		$this->expectException('InvalidArgumentException');
+		$this->expectExceptionMessage('Difference between inserted and entity keys');
+
+		$manager = new Manager($this->mockDb, $this->mockReader);
+		$manager->find(ComplexItem::class, 99);
+	}
+
+	public function testFindByUniqueIdFail(): void
+	{
+		$this->expectException('InvalidArgumentException');
+		$this->expectExceptionMessage('Nonexistent unique key');
+
+		$manager = new Manager($this->mockDb, $this->mockReader);
+		$manager->find(Basic::class, ['name'=>'fail']);
 	}
 }

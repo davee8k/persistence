@@ -12,16 +12,17 @@ use InvalidArgumentException;
 class Manager
 {
 	/** @var PDO */
-	private PDO $db;
+	private readonly PDO $pdo;
 	/** @var AttributeReader */
-	private AttributeReader $reader;
+	private readonly AttributeReader $reader;
 
 	/**
-	 * @param PDO $db
+	 * @param PDO $pdo
+	 * @param AttributeReader $reader
 	 */
-	public function __construct(PDO $db, AttributeReader $reader)
+	public function __construct(PDO $pdo, AttributeReader $reader)
 	{
-		$this->db = $db;
+		$this->pdo = $pdo;
 		$this->reader = $reader;
 	}
 
@@ -31,7 +32,7 @@ class Manager
 	 */
 	protected function getPdo(): PDO
 	{
-		return $this->db;
+		return $this->pdo;
 	}
 
 	/**
@@ -60,7 +61,7 @@ class Manager
 		} else {
 			$cols[] = $this->getColumnName($info, $info[Attr\Id::class])." = ?";
 		}
-		$req = $this->db->prepare("SELECT * FROM ".$info[Attr\Table::class].
+		$req = $this->pdo->prepare("SELECT * FROM ".$info[Attr\Table::class].
 				" WHERE ".implode(" AND ", $cols)." LIMIT 1");
 		if ($req->execute(is_array($id) ? array_values($id) : [$id])) {
 			return $this->buildEntity($className, $info, $req->fetch(PDO::FETCH_ASSOC));
@@ -79,7 +80,7 @@ class Manager
 	{
 		$info = $this->reader->getInfo($className);
 
-		$request = $this->db->query("SELECT * FROM ".$info[Attr\Table::class].
+		$request = $this->pdo->query("SELECT * FROM ".$info[Attr\Table::class].
 				($limit ? " LIMIT ".$limit : '').($offset ? " OFFSET ".$offset : ''), PDO::FETCH_ASSOC);
 
 		if ($request) {
@@ -137,7 +138,7 @@ class Manager
 				throw new InvalidArgumentException("Invalid subentity: ".htmlspecialchars($currentClass, ENT_QUOTES)." for: ".htmlspecialchars($parentClass, ENT_QUOTES));
 			}
 
-			$req = $this->db->prepare("SELECT * FROM ".$info[Attr\Table::class].
+			$req = $this->pdo->prepare("SELECT * FROM ".$info[Attr\Table::class].
 					" WHERE ".implode(' AND ', $this->getColumnBinds($keys, true)));
 
 			if ($req->execute($keys)) {
@@ -160,12 +161,12 @@ class Manager
 		$key = $this->getKeyColumn($info);
 
 		$data = $this->renameToColumns($info, $record->getData());
-		$req = $this->db->prepare('INSERT INTO '.$info[Attr\Table::class].' ('.implode(', ', array_keys($data)).')'.
+		$req = $this->pdo->prepare('INSERT INTO '.$info[Attr\Table::class].' ('.implode(', ', array_keys($data)).')'.
 				' VALUES (:'.implode(', :', array_keys($data)).')');
 		$req->execute($data);
 
 		if ($primary && empty($record->$primary)) {
-			$record->$primary = (int) $this->db->lastInsertId();
+			$record->$primary = (int) $this->pdo->lastInsertId();
 		}
 
 		if (!empty($info[Attr\Collection::class])) {
@@ -192,7 +193,7 @@ class Manager
 
 		$keys = EntityInteract::getUniqueKey($record);
 		$data = $this->renameToColumns($info, $record->getData());
-		$req = $this->db->prepare('UPDATE '.$info[Attr\Table::class].
+		$req = $this->pdo->prepare('UPDATE '.$info[Attr\Table::class].
 				' SET '.implode(', ', $this->getColumnBinds($data, true)).
 				' WHERE '.implode(' AND ', $this->getColumnBinds($keys, true)).' LIMIT 1');
 		$req->execute($data);
@@ -214,7 +215,7 @@ class Manager
 			}
 		}
 		$keys = EntityInteract::getUniqueKey($record);
-		$req = $this->db->prepare('DELETE FROM '.$info[Attr\Table::class].
+		$req = $this->pdo->prepare('DELETE FROM '.$info[Attr\Table::class].
 				' WHERE '.implode(' AND ', $this->getColumnBinds($keys, true)).' LIMIT 1');
 		$req->execute($keys);
 		EntityInteract::setUniqueKey($record, null);
@@ -383,6 +384,12 @@ class Manager
 		return $newArray;
 	}
 
+	/**
+	 *
+	 * @param array<string, mixed> $info
+	 * @param array<string, mixed> $array
+	 * @return array<string, string>
+	 */
 	protected function renameToProperties(array $info, array $array): array
 	{
 		$newArray = [];

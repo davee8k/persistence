@@ -1,17 +1,9 @@
 <?php
 declare(strict_types=1);
 
+use TestEntity\{Basic, Complex, ComplexItem, FailNoEntity, FailNoKey};
 use Persistence\AttributeReader;
-use Persistence\Attr\{
-	UniqueId,
-	JoinColumn,
-	Collection
-};
-use TestEntity\{
-	Basic,
-	Complex,
-	ComplexItem
-};
+use Persistence\Attr\{UniqueId, JoinColumn, Collection};
 
 class AttributeReaderTest extends \PHPUnit\Framework\TestCase
 {
@@ -92,7 +84,7 @@ class AttributeReaderTest extends \PHPUnit\Framework\TestCase
 				'complex_id' => [
 					'name' => 'complex_id',
 					'type' => 'int',
-					'null' => false
+					'null' => true
 				]
 			],
 			'Persistence\Attr\UniqueId' => [
@@ -105,7 +97,7 @@ class AttributeReaderTest extends \PHPUnit\Framework\TestCase
 		];
 	}
 
-	public function testCreateBasicFunctionsSuccess(): void
+	public function testAttributeReadSuccess(): void
 	{
 		$reader = new AttributeReader();
 
@@ -114,5 +106,25 @@ class AttributeReaderTest extends \PHPUnit\Framework\TestCase
 		$this->assertEquals(static::attrComplex(), $reader->getInfo(TestEntity\Complex::class));
 
 		$this->assertEquals(static::attrComplexItem(), $reader->getInfo(TestEntity\ComplexItem::class));
+	}
+
+	public function testAttributeEntityFail(): void
+	{
+		$reader = new AttributeReader();
+
+		$this->expectException('RuntimeException');
+		$this->expectExceptionMessage('Not Entity instance: TestEntity\FailNoEntity');
+
+		 $reader->getInfo(TestEntity\FailNoEntity::class);
+	}
+
+	public function testAttributeKeyFail(): void
+	{
+		$reader = new AttributeReader();
+
+		$this->expectException('RuntimeException');
+		$this->expectExceptionMessage('Entity instance missing key: TestEntity\FailNoKey');
+
+		 $reader->getInfo(TestEntity\FailNoKey::class);
 	}
 }

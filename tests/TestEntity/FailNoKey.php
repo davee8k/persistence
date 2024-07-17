@@ -4,14 +4,13 @@ declare(strict_types=1);
 namespace TestEntity;
 
 use Persistence\Attr\Table;
-use Persistence\Attr\Id;
 use Persistence\Entity;
 
 /**
- * Basic dummy entity
+ * Fail test - missing unique key
  */
 #[Table('basic')]
-class Basic extends Entity
+class FailNoKey extends Entity
 {
 	/**
 	 * @param string $name
@@ -21,7 +20,6 @@ class Basic extends Entity
 	public function __construct(
 			public string $name,
 			public int $price,
-			#[Id]
 			public ?int $id = null
 	)
 	{}

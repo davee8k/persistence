@@ -10,7 +10,7 @@ PHP 8.1 and newer
 
 ## Usage
 
-More examples of use are in /demo or /test directory
+More examples of use are in /demo or /tests directory
 
 ### Basic entity definition
 

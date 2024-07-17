@@ -5,13 +5,12 @@ namespace TestEntity;
 
 use Persistence\Attr\Table;
 use Persistence\Attr\Id;
-use Persistence\Entity;
 
 /**
- * Basic dummy entity
+ * Fail test - missing entity
  */
-#[Table('basic')]
-class Basic extends Entity
+#[Table('fail')]
+class FailNoEntity
 {
 	/**
 	 * @param string $name
